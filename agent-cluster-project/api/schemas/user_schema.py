@@ -4,4 +4,5 @@ class UserResponse(BaseModel):
     id: UUID
     name:str|None
     email: str
+
     
