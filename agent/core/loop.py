@@ -2,9 +2,9 @@ from agent.config import settings
 from agent.tools.schemas import tools
 import json
 from agent.core.llm import LLM
-from utils.logger import get_logger
+from agent.utils.logger import get_logger
 from agent.tools.registry import tools_registry
-from validator import validate_args
+from agent.core.validator import validate_args
 logger=get_logger(__name__)
 
 def run_agent(message:list[dict]):

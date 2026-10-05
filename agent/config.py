@@ -10,7 +10,7 @@ class AgentSettings(BaseModel):
     debug:bool=False
     
 class Settings(BaseSettings):
-    model_config=SettingsConfigDict(env_file='.env',env_file_encoding='__',extra='ignore')
+    model_config=SettingsConfigDict(env_file='.env',env_nested_delimiter="__",extra='ignore')
     llm:LLMSettings=LLMSettings()
     agent:AgentSettings=AgentSettings()
 settings=Settings()
