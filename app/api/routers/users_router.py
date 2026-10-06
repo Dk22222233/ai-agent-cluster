@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends
-from supabase_auth import UserResponse
+from api.schemas.user_schema import UserResponse
 from api.dependencies import get_current_user
 
 
