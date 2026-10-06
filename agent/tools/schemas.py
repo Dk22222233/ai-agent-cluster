@@ -7,8 +7,8 @@ tools=[
             'parameters': {
                 'type': 'object',
                 'properties': {
-                    'a': {'type': 'number', 'description': 'First number to add'},
-                    'b': {'type': 'number', 'description': 'Second number to add'}
+                    'a': {'type': 'number', 'description': 'First number'},
+                    'b': {'type': 'number', 'description': 'Second number'}
                 }
             }
         }
@@ -22,8 +22,8 @@ tools=[
             'parameters': {
                 'type': 'object',
                 'properties': {
-                    'a': {'type': 'number', 'description': 'First number to multiply'},
-                    'b': {'type': 'number', 'description': 'Second number to multiply'}
+                    'a': {'type': 'number', 'description': 'First number'},
+                    'b': {'type': 'number', 'description': 'Second number'}
                 }
             }
         }
