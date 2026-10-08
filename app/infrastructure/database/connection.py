@@ -9,9 +9,3 @@ session=sessionmaker(
 )
 Base=declarative_base()
 
-def get_db():
-    db:Session=session()
-    try:
-        yield db
-    finally:
-        db.close()
