@@ -1,4 +1,5 @@
 from config import settings
+from app.integrations.google.state_store import state_store
 from uuid import UUID
 from google_auth_oauthlib.flow import Flow
 import hashlib
@@ -35,6 +36,7 @@ class GoogleAuth:
         code_challenge = (base64.urlsafe_b64encode(
              hashlib.sha256(code_verifier.encode("ascii")).digest()
                 ).rstrip(b"=").decode("ascii"))
+        # save credentails to redis
         self.state_store.save(
             state=state,
             user_id=user_id,
@@ -52,18 +54,22 @@ class GoogleAuth:
         )
         return auth_url
 
-    def consume_state(self,state:str)->UUID:
-        user_id=self.state_store.consume(state)
-        if user_id is None:
+    def consume_state(self,state:str)->dict:
+        data=self.state_store.consume(state)
+        if data is None:
             raise ValueError("Invalid, expire or already used OAuth state")
-        return UUID(str(user_id))
+        return {
+            'user_id':UUID(str(data['user_id'])),
+            'code_verifier':str(data['code_verifier'])
+        }
 
-    def exchange_code(self, code:str, state:str):
+    def exchange_code(self, code:str, state:str,code_verifier):
         flow=Flow.from_client_config(
             self.client_config,
             scopes= SCOPES,
             state=state
         )
         flow.redirect_uri=settings.GOOGLE_REDIRECT_URI
+        flow.code_verifier=code_verifier
         flow.fetch_token(code=code)
         return flow.credentials
