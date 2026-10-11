@@ -12,4 +12,9 @@ class OpenAIAdapter(LLM):
             api_key=api_key
         )
     def call_llm(self, llm_request:LLMRequestModel)->ResponseModel:
-        return ResponseModel
+        response=self.client.chat.completions.create(
+            model=self.model_name,
+            messages=llm_request.message_request,
+            tools=llm_request.tools
+        )
+        return ResponseModel()
