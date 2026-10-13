@@ -1,12 +1,12 @@
-from .tools import add, multiply, AddArgs, MulitplyArgs
+from .tools import add, multiply, Add, Mulitply
 
 tools_registry={
     'add':{
         'function':add,
-        'schema':AddArgs
+        'schema':Add
     },
     'multiply':{
         'function':multiply,
-        'schema':MulitplyArgs
+        'schema':Mulitply
     }
 }

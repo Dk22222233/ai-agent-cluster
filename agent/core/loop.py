@@ -3,6 +3,7 @@ from agent.tools.registry import tools_registry
 from agent.models.llm_request_model import LLMRequestModel
 from agent.core.dispatcher import execute_tool
 from agent.core.llm import LLM
+import json
 from agent.utils.logger import get_logger
 
 logger=get_logger(__name__)
@@ -28,7 +29,7 @@ def run_agent(message:list[dict],llm:LLM):
                         'type':'function',
                         'function':{
                             'name':tc.name,
-                            'arguments':tc.arguments
+                            'arguments':json.dumps(tc.arguments)
                                 }
                             }
                             for tc in assistant_message.tool_call

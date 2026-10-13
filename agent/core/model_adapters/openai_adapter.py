@@ -21,6 +21,7 @@ class OpenAIAdapter(LLM):
                 'function':{
                     'name':t.__name__.lower(),
                     'description':t.__doc__ or '',
+                    # it will eat more token as it has extra titles..
                     'parameters':t.model_json_schema()
                 }
             }
