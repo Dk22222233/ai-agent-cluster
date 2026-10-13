@@ -17,7 +17,7 @@ class IntegrationModel(Base):
     # uniquue id for each integration connection
     id:Mapped[uuid.UUID]=mapped_column(primary_key=True,default=uuid.uuid4)
     # owner id: application user id  
-    user_id:Mapped[uuid.UUID]=mapped_column(ForeignKey('user.id',ondelete='CASCADE'),nullable=False,index=True)
+    user_id:Mapped[uuid.UUID]=mapped_column(ForeignKey('users.id',ondelete='CASCADE'),nullable=False,index=True)
 
     provider:Mapped[str]=mapped_column(String(50),nullable=False)
 
@@ -29,4 +29,4 @@ class IntegrationModel(Base):
 
     created_at:Mapped[datetime]=mapped_column(DateTime(timezone=True),server_default=func.now(),nullable=False)
 
-    updated_at:Mapped[datetime]=mapped_column(DateTime(timezone=True),server_default=func.now(),onupdate=func.now(),nullable=False)
+    updated_at:Mapped[datetime]=mapped_column(DateTime(timezone=True),server_onupdate=func.now(),onupdate=func.now(),nullable=False)

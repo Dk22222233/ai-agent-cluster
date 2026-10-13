@@ -1,5 +1,5 @@
-from .tools import add, multiply
-from agent.core.validator import AddArgs,MulitplyArgs
+from .tools import add, multiply, AddArgs, MulitplyArgs
+
 tools_registry={
     'add':{
         'function':add,

@@ -27,7 +27,6 @@ class GoogleAuth:
         flow=Flow.from_client_config(
             self.client_config,
             scopes=SCOPES,
-            
         )
         # generate state and PKCE verifier
         # used to prevent CSRF attacks
