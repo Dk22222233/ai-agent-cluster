@@ -15,13 +15,17 @@ class IntegrationRepo:
         connection=db.execute(stmt).scalar_one_or_none()
         if connection and connection.refresh_token:
             connection.refresh_token=cipher.decrypt(connection.refresh_token.encode()).decode()
+            connection.access_token=cipher.decrypt(connection.access_token.encode()).decode()
         return connection
 
-    def save_google_connection(self,user_id:UUID,refresh_token,db:Session):
-        encrypted_refresh=cipher.encrypt(refresh_token.encode()).decode()
+    def save_google_connection(self,user_id:UUID,refresh_token:str,access_token:str|None,db:Session):
+        encrypted_refresh=cipher.encrypt(refresh_token.encode()).decode() # encryption of tokens before saving
+        encrypted_access=cipher.encrypt(access_token.encode()).decode()
+        # create db model and save it 
         connection=IntegrationModel(
             user_id=user_id,
             refresh_token=encrypted_refresh,
+            access_token=encrypted_access,
             provider='Google' # HardCoded Provider
         )
         db.add(connection)

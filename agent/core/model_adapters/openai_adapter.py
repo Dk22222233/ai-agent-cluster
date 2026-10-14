@@ -1,8 +1,8 @@
 from agent.core.llm import LLM
 from openai import OpenAI
 import json
-from agent.models.response_model import ResponseModel, Usage, ToolCall
-from agent.models.llm_request_model import LLMRequestModel
+from agent.models import ResponseModel, Usage, ToolCall,LLMRequestModel, Message
+
 class OpenAIAdapter(LLM):
     def __init__(self,model_name, base_url,api_key):
         self.model_name=model_name
@@ -12,6 +12,8 @@ class OpenAIAdapter(LLM):
             base_url=base_url,
             api_key=api_key
         )
+    def _to_openAI_messages(self,messages:list[Message])->list[dict]:
+        pass
     def _to_openAI_tools(self,tools):
         if not tools:
             return None
@@ -48,7 +50,7 @@ class OpenAIAdapter(LLM):
         return ResponseModel(
             id=response.id,
             content=choice.message.content,
-            tool_call=self._to_tool_call(choice.message.tool_calls),
+            tool_call=self._to_tool_call(choice.message.tool_calls) or [],
             finish_reason=choice.finish_reason,
             model=response.model,
             usage=Usage(

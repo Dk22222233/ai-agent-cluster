@@ -1,8 +1,8 @@
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from fastapi import Depends, HTTPException, status
 from sqlalchemy.orm import Session
-from app.infrastructure.database.connection import session
-from auth.service import auth_service
+from app.infrastructure.database.connection import SessionLocal
+from app.auth.service import auth_service
 security = HTTPBearer()
 def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(security)):
     access_token = credentials.credentials
@@ -17,7 +17,7 @@ def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(securit
         )
 
 def get_db():
-    db:Session=session()
+    db:Session=SessionLocal()
     try:
         yield db
     finally:

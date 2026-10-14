@@ -9,5 +9,5 @@ class Settings(BaseSettings):
     GOOGLE_CLIENT_SECRET:SecretStr
     GOOGLE_REDIRECT_URI:str
     REDIS_URL:str
-    OAUTH_TOKEN_ENCRYPTION_KEY:SecretStr
+    OAUTH_TOKEN_ENCRYPTION_KEY:str
 settings = Settings()

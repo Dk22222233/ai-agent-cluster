@@ -2,7 +2,7 @@ from pydantic import BaseModel,Field
 class ResponseModel(BaseModel):
     id:str
     content:str|None =None
-    tool_call:list[ToolCall]
+    tool_calls:list[ToolCall] =Field(default_factory=list)
     finish_reason:str|None=None
     model:str|None=None
     raw:dict|None=Field(default=None,exclude=True)

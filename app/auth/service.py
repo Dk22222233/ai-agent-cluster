@@ -1,5 +1,5 @@
-from auth.providers.supabase import SupabaseAuthProvider
-from auth.interface import AuthProvider
+from app.auth.providers.supabase import SupabaseAuthProvider
+from app.auth.interface import AuthProvider
 class AuthService:
     def __init__(self,provider:AuthProvider):
         self.provider = provider

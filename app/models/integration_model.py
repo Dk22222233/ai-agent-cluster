@@ -13,7 +13,7 @@ from sqlalchemy.orm import Mapped, mapped_column
 from app.infrastructure.database.connection import Base
 class IntegrationModel(Base):
     __tablename__='integrations'
-    __table_args__=(UniqueConstraint('user_id','provider',name='uq_integration_user_provider'))
+    __table_args__=(UniqueConstraint('user_id','provider',name='uq_integration_user_provider'),)
     # uniquue id for each integration connection
     id:Mapped[uuid.UUID]=mapped_column(primary_key=True,default=uuid.uuid4)
     # owner id: application user id  

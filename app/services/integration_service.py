@@ -23,15 +23,17 @@ class IntegrationService:
         )
         existing=await self.integration_repo.get_google_connection(user_id,db)
         refresh_token=credentails.refresh_token or (existing.refresh_token if existing else None)
+        access_token=credentails.access_token or (existing.access_token if existing else None)
         if not refresh_token:
             raise ValueError(
                 "Google didn't return a refresh token"
                 'Handle the existing connection or reauthorization'
             )
         
-        self.integration_repo.save_google_connection(
+        await self.integration_repo.save_google_connection(
             user_id=user_id,
-            refresh_token=credentails.refresh_token,
+            refresh_token=refresh_token,
+            access_token=access_token,
             db=db
         )
         return {
