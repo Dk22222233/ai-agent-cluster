@@ -5,7 +5,7 @@ from app.api.schemas import UserResponse
 from app.services import agent_service
 router=APIRouter(prefix='/agent',tags=['Agent'])
 
-@router.post('/chat') #,response_model=AgentChatResponse
+@router.post('/chat',response_model=AgentChatResponse) 
 def agent_chat_request(request:AgentChatRequest): # , user:UserResponse=Depends(get_current_user)
     input_request=request.message
     resp=agent_service.agent_chat_request_service(input_request)
