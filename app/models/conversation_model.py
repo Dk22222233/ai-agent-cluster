@@ -31,7 +31,7 @@ class ConversationModel(Base):
         nullable=False
         )
 
-    message:Mapped[list["MessageModel"]]=relationship(
+    messages:Mapped[list["MessageModel"]]=relationship(
         back_populates='conversation',
         cascade='all, delete-orphan',
         order_by='MessageModel.created_at'

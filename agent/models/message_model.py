@@ -5,7 +5,7 @@ from agent.models.response_model import ToolCall
 class AssistantMessage(BaseModel):
     role:Literal['assistant']
     content:str|None=None
-    tool_call:list[ToolCall]|None=None
+    tool_calls:list[ToolCall]|None=None
 
 class SystemMessage(BaseModel):
     role:Literal['system']

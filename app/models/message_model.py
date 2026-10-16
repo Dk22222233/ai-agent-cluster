@@ -12,8 +12,9 @@ class MessageModel(Base):
     __tablename__='messages'
 
     __table_args__=(
-        CheckConstraint("role IN ('user','assistant')",name='ck_message_role'),
-        Index('idx_messages_conv_created', 'conversation_id','created_at')
+        CheckConstraint("role IN ('user','assistant','tool','system')",name='ck_message_role'),
+        Index('idx_messages_conv_created', 'conversation_id','created_at'),
+        CheckConstraint("status IN ('streaming','completed','failed','cancelled')",name='ck_message_status')
     )
 
     id:Mapped[uuid.UUID]=mapped_column(UUID(as_uuid=True),primary_key=True,default=uuid.uuid4)
