@@ -1,5 +1,6 @@
-from agent import agent_runtime
+from agent import agent_runtime, AgentResult
 from uuid import UUID
+from app.adapters.agent_history_context import _orm_to_agent_dto, _message_dto_to_orm
 from app.repositories import conversation_repo, message_repo
 from app.api.schemas import AgentChatRequest, AgentChatResponse, MessageResponse
 class AgentService:
@@ -25,18 +26,26 @@ class AgentService:
         history_orm=message_repo.get_latest(conversation_id=conv_orm.id,n=60)
         #---convert to context for agent
 
-        history=[
-            MessageResponse.model_validate(m) for m in history_orm
-        ]
+        history=_orm_to_agent_dto(history_orm)
 
         # agent calling
-        reply_text=agent_runtime(input=request.message,)
+        result:AgentResult=agent_runtime(input=request.message,history=history)
+        #------orm is none at first
+        assistant_orm=None
+        # iteration of new_message and pick Message objects
+        for msg in result.new_messages:
 
-        assistant_orm=message_repo.create_msg(
-            conversation_id=conv_orm.id,
-            role='assistant',
-            content=reply_text
-        )
+            row=message_repo.create_msg(
+                conversation_id=conv_orm.id,
+                
+                status=(
+                    'completed' if result.finish_reason in ('stop',None)
+                    else 'failed'
+                ),
+                **_message_dto_to_orm(msg),
+            )
+            assistant_orm=row
+
         return AgentChatResponse(
             conversation_id=conv_orm.id,
             response=MessageResponse(

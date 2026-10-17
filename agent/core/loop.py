@@ -26,7 +26,8 @@ def run_agent(message:list[Message],llm:LLM)->AgentResult:
     tool_schemas=[entry['schema'] for entry in tools_registry.values()]
     last_assistant:AssistantMessage|None=None
     total_usage:Usage|None=None
-
+    #----capture the initail len of message, everything after this will consider as new msg
+    initial_len=len(message)
 
     for step in range(1,settings.agent.MAX_STEPS+1):
 
@@ -44,9 +45,11 @@ def run_agent(message:list[Message],llm:LLM)->AgentResult:
             tool_calls=llm_response.tool_calls
         )
         message.append(last_assistant)
+
         if not llm_response.tool_calls:
             return AgentResult(
                 message=last_assistant,
+                new_messages=message[initial_len:],
                 steps=step,
                 finish_reason=llm_response.finish_reason or 'stop',
                 usage=total_usage
@@ -63,6 +66,7 @@ def run_agent(message:list[Message],llm:LLM)->AgentResult:
     logger.info('Max steps reached without final answer')
     return AgentResult(
         message=last_assistant or AssistantMessage(content=None),
+        new_messages=message[initial_len:],
         steps=settings.agent.MAX_STEPS,
         finish_reason='max-steps',
         usage=total_usage
