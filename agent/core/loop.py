@@ -3,6 +3,7 @@ from agent.tools.registry import tools_registry
 from agent.models import LLMRequestModel, Message ,AssistantMessage, ToolMessage, AgentResult,Usage
 from agent.core.dispatcher import execute_tool
 from agent.core.llm import LLM
+
 from agent.utils.logger import get_logger
 
 logger=get_logger(__name__)
@@ -36,6 +37,9 @@ def run_agent(message:list[Message],llm:LLM)->AgentResult:
             tools=tool_schemas
         )
         llm_response=llm.call_llm(llm_request=request)
+        print(f"DEBUG: content={llm_response.content!r}")
+        print(f"DEBUG: tool_calls={llm_response.tool_calls!r}")
+        print(f"DEBUG: finish_reason={llm_response.finish_reason!r}")
         total_usage=_merge_usage(total_usage,llm_response.usage)
 
         

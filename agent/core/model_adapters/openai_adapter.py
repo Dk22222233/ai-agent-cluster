@@ -1,7 +1,17 @@
 from agent.core.llm import LLM
 from openai import OpenAI
 import json
-from agent.models import ResponseModel, Usage, ToolCall,LLMRequestModel, Message
+from agent.models import (
+    ResponseModel, 
+    Usage, 
+    ToolCall,
+    LLMRequestModel,
+    UserMessage, 
+    Message,
+    SystemMessage,
+    AssistantMessage,
+    ToolMessage
+    )
 
 class OpenAIAdapter(LLM):
     def __init__(self,model_name, base_url,api_key):
@@ -13,7 +23,44 @@ class OpenAIAdapter(LLM):
             api_key=api_key
         )
     def _to_openAI_messages(self,messages:list[Message])->list[dict]:
-        pass
+        output:list[dict]=[]
+        for m in messages:
+            if isinstance(m,SystemMessage):
+                output.append({
+                    'role':'system',
+                    'content':m.content
+                })
+            elif isinstance(m, UserMessage):
+                output.append({"role": "user", "content": m.content})
+            elif isinstance(m,AssistantMessage):
+                d:dict={
+                    'role':'assistant',
+                    'content':m.content or ''
+                }
+                if m.tool_calls:
+                    d["tool_calls"]=[
+                        {
+                        'id':tc.id,
+                        'type':'function',
+                        'function':{
+                            'name':tc.name,
+                            'arguments':json.dumps(tc.arguments)
+                        }
+                    }
+                     for tc in m.tool_calls
+                    ]
+                output.append(d)
+            elif isinstance(m,ToolMessage):
+                output.append({
+                    'role':'tool',
+                    'tool_call_id':m.tool_call_id,
+                    'content':m.content
+                })
+
+            else:
+                raise TypeError(f'Unknown message type: {type(m)}')
+
+        return output
     def _to_openAI_tools(self,tools):
         if not tools:
             return None
@@ -31,7 +78,7 @@ class OpenAIAdapter(LLM):
             ]
     def _to_tool_call(self,raw):
         if not raw:
-            return None
+            return []
         return [
             ToolCall(
                 id=tc.id,
@@ -41,23 +88,28 @@ class OpenAIAdapter(LLM):
             for tc in raw
         ]
     def call_llm(self, llm_request:LLMRequestModel)->ResponseModel:
-        response=self.client.chat.completions.create(
-            model=self.model_name,
-            messages=llm_request.message_request,
-            tools=self._to_openAI_tools(llm_request.tools)
-        )
-        choice=response.choices[0]
+        kwargs={
+            'model':self.model_name,
+            'messages':self._to_openAI_messages(llm_request.message_request)
+        }
+        tools=self._to_openAI_tools(llm_request.tools)
+        if tools:
+            kwargs['tools']=tools
+
+        response = self.client.chat.completions.create(**kwargs)
+        choice = response.choices[0]
+
         return ResponseModel(
             id=response.id,
             content=choice.message.content,
-            tool_call=self._to_tool_call(choice.message.tool_calls) or [],
-            finish_reason=choice.finish_reason,
+            tool_calls=self._to_tool_call(choice.message.tool_calls),
+            finish_reason=choice.finish_reason,          # ← ADD THIS LINE
             model=response.model,
             usage=Usage(
                 prompt_tokens=response.usage.prompt_tokens,
                 completion_tokens=response.usage.completion_tokens,
-                total_tokens=response.usage.total_tokens
-            )
-        )
+                total_tokens=response.usage.total_tokens,
+         ),
+)
 
     
