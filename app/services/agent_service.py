@@ -46,15 +46,16 @@ class AgentService:
                 **_message_dto_to_orm(msg),
                 db=db
             )
-            assistant_orm=row
+            if msg is result.message:
+                assistant_orm=row
 
         return AgentChatResponse(
             conversation_id=conv_orm.id,
             response=MessageResponse(
                 id=assistant_orm.id,
                 role='assistant',
-                content= assistant_orm.content or ''
-            )
+                content= assistant_orm.content ,
+                )
         )
 
 agent_service=AgentService()
