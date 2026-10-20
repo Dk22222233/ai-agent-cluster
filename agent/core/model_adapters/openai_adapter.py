@@ -10,7 +10,8 @@ from agent.models import (
     Message,
     SystemMessage,
     AssistantMessage,
-    ToolMessage
+    ToolMessage,
+    ToolDefinition
     )
 
 class OpenAIAdapter(LLM):
@@ -61,21 +62,18 @@ class OpenAIAdapter(LLM):
                 raise TypeError(f'Unknown message type: {type(m)}')
 
         return output
-    def _to_openAI_tools(self,tools):
-        if not tools:
-            return None
+    def _to_openAI_tools(self, tools: list[ToolDefinition]) -> list[dict]:
         return [
-            {
-                'type':'function',
-                'function':{
-                    'name':t.__name__.lower(),
-                    'description':t.__doc__ or '',
-                    # it will eat more token as it has extra titles..
-                    'parameters':t.model_json_schema()
-                }
-            }
-            for t in tools
-            ]
+        {
+            "type": "function",
+            "function": {
+                "name": tool.name,
+                "description": tool.description,
+                "parameters": tool.parameters,
+            },
+        }
+        for tool in tools
+    ]
     def _to_tool_call(self,raw):
         if not raw:
             return []
@@ -87,11 +85,13 @@ class OpenAIAdapter(LLM):
             )
             for tc in raw
         ]
+    # this is request model a request model just take request and design response acc to DTO
     def call_llm(self, llm_request:LLMRequestModel)->ResponseModel:
         kwargs={
             'model':self.model_name,
             'messages':self._to_openAI_messages(llm_request.message_request)
         }
+        # ------pick tools from request and convert it into llm specific
         tools=self._to_openAI_tools(llm_request.tools)
         if tools:
             kwargs['tools']=tools

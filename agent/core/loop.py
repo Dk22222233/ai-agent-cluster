@@ -1,6 +1,6 @@
 from agent.config import settings
 from agent.tools.registry import tools_registry
-from agent.models import LLMRequestModel, Message ,AssistantMessage, ToolMessage, AgentResult,Usage
+from agent.models import LLMRequestModel, Message ,AssistantMessage, ToolMessage, AgentResult,Usage,ToolDefinition
 from agent.core.dispatcher import execute_tool
 from agent.core.llm import LLM
 
@@ -23,18 +23,25 @@ def _merge_usage(a:Usage|None,b:Usage|None)->Usage|None:
 def run_agent(message:list[Message],llm:LLM)->AgentResult:
 
     logger.info(f'Conversation History:{message}')
-
-    tool_schemas=[entry['schema'] for entry in tools_registry.values()]
+    # accessing objects from tool registry, tools var required by llmrequestmodel
+    tools = [
+    ToolDefinition(
+        name=name,
+        description=config["function"].__doc__ or "",
+        parameters=config["schema"].model_json_schema(),
+    )
+    for name, config in tools_registry.items()
+]
     last_assistant:AssistantMessage|None=None
     total_usage:Usage|None=None
     #----capture the initail len of message, everything after this will consider as new msg
     initial_len=len(message)
 
     for step in range(1,settings.agent.MAX_STEPS+1):
-
+        # passing the tool registry to request llm
         request=LLMRequestModel(
             message_request=message,
-            tools=tool_schemas
+            tools=tools
         )
         llm_response=llm.call_llm(llm_request=request)
         print(f"DEBUG: content={llm_response.content!r}")

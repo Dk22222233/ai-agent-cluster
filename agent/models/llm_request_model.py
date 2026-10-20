@@ -4,5 +4,10 @@ from typing import Any
 class LLMRequestModel(BaseModel):
     # model:str
     message_request:list[Message]
-    tools:list[type[BaseModel]]=Field(default_factory=list)
+    tools:list[ToolDefinition]=Field(default_factory=list)
     parameters:dict[str,Any]=Field(default_factory=dict)
+
+class ToolDefinition(BaseModel):
+    name: str
+    description: str
+    parameters: dict[str, Any]

@@ -1,6 +1,7 @@
 from agent.core.prompts import SYSTEM_PROMPT, ERROR_PROMPT
 from agent.models import Message, SystemMessage,AssistantMessage, UserMessage
 def input_message(user_input:str, history:list[Message]|None=None)->list[Message]:
+    # output is list of Messages
     message:list[Message]=[
         SystemMessage(role='system',content=SYSTEM_PROMPT+ERROR_PROMPT)
     ]
