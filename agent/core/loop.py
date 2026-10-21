@@ -3,7 +3,7 @@ from agent.tools.registry import tools_registry
 from agent.models import LLMRequestModel, Message ,AssistantMessage, ToolMessage, AgentResult,Usage,ToolDefinition
 from agent.core.dispatcher import execute_tool
 from agent.core.llm import LLM
-
+from agent import ExecutionContext
 from agent.utils.logger import get_logger
 
 logger=get_logger(__name__)
@@ -20,18 +20,11 @@ def _merge_usage(a:Usage|None,b:Usage|None)->Usage|None:
     )
 
 
-def run_agent(message:list[Message],llm:LLM)->AgentResult:
+def run_agent(message:list[Message],llm:LLM,ctx:ExecutionContext)->AgentResult:
 
     logger.info(f'Conversation History:{message}')
     # accessing objects from tool registry, tools var required by llmrequestmodel
-    tools = [
-    ToolDefinition(
-        name=name,
-        description=config["function"].__doc__ or "",
-        parameters=config["schema"].model_json_schema(),
-    )
-    for name, config in tools_registry.items()
-]
+    tools = [tool.definition for tool in tools_registry.values()]
     last_assistant:AssistantMessage|None=None
     total_usage:Usage|None=None
     #----capture the initail len of message, everything after this will consider as new msg
@@ -68,7 +61,7 @@ def run_agent(message:list[Message],llm:LLM)->AgentResult:
         else:
             #----------------------Tool Dispatch-----------------------------
             for tc in llm_response.tool_calls:
-                result=execute_tool(tc)
+                result=execute_tool(tc,ctx)
                 message.append(ToolMessage(
                     role='tool',
                     tool_call_id=tc.id,

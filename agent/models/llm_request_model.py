@@ -1,6 +1,8 @@
 from pydantic import BaseModel, Field
 from agent.models.message_model import Message
 from typing import Any
+from dataclasses import dataclass
+from typing import Any, Callable
 class LLMRequestModel(BaseModel):
     # model:str
     message_request:list[Message]
@@ -11,3 +13,11 @@ class ToolDefinition(BaseModel):
     name: str
     description: str
     parameters: dict[str, Any]
+
+
+@dataclass(frozen=True)
+class RegisteredTool:
+    definition: ToolDefinition
+    args_schema: type[BaseModel]
+    handler: Callable
+    dependencies: tuple[str, ...] = ()

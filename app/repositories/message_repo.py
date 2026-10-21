@@ -24,7 +24,7 @@ class MessageRepo:
         Return the most recent `n` messages in the chronographical order'''
         stmt=(select(MessageModel).
               where(conversation_id==conversation_id).
-              order_by(MessageModel.created_at._desc()).
+              order_by(MessageModel.created_at.desc()).
               limit(n)
               )
         rows=list(db.execute(stmt).scalars().all())

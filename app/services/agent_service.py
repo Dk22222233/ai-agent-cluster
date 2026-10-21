@@ -1,4 +1,4 @@
-from agent import agent_runtime, AgentResult
+from agent import agent_runtime, AgentResult, ExecutionContext
 from uuid import UUID
 from sqlalchemy.orm import Session
 from app.adapters.agent_history_context import _orm_to_agent_dto, _message_dto_to_orm
@@ -20,7 +20,10 @@ class AgentService:
         message_repo.create_msg(
             conversation_id=conv_orm.id,
             role='user',
-            content=request.message, # request message is str
+            content=request.message,# request message is str
+            tool_calls=None,
+            tool_call_id=None,
+            db=db  
             
         )
 
@@ -28,9 +31,12 @@ class AgentService:
         #---convert to context for agent
 
         history=_orm_to_agent_dto(history_orm)
-
+        ctx:ExecutionContext=ExecutionContext(
+            user_id=user_id,
+            db=db
+        )
         # agent calling
-        result:AgentResult=agent_runtime(input=request.message,history=history)
+        result:AgentResult=agent_runtime(input=request.message,history=history,ctx=ctx)
         #------orm is none at first
         assistant_orm=None
         # iteration of new_message and pick Message objects

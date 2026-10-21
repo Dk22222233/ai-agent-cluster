@@ -1,8 +1,10 @@
 from agent.tools.registry import tools_registry
 from agent.models.response_model import ToolCall
+from agent.dependencies.resolver import dependency_resolver
 from agent.utils.logger import get_logger
+from agent import ExecutionContext
 logger=get_logger(__name__)
-def execute_tool(tool_call:ToolCall):
+def execute_tool(tool_call:ToolCall,ctx:ExecutionContext):
     try:
         name=tool_call.name # this gets the function name from the ai response stored in DTO ResponseModel
         logger.debug(f'Tool Name:{name}')
@@ -10,15 +12,16 @@ def execute_tool(tool_call:ToolCall):
         tool=tools_registry[name] # pick a tool from available (tool registry) tools
         logger.debug(f'Tool Picked From Registry:{tool}')
 
-        args_schema=tool['schema'] # access schema for specific tool from avavilable tools (tool registry)
+        args_schema=tool.args_schema # access schema for specific tool from avavilable tools (tool registry)
         logger.debug(f'Access Args Schema From Registry:{args_schema}')
-
-        function=tool['function'] # fxn of tool accessed 
+        
+        function=tool.handler # fxn of tool accessed 
 
         arguments=tool_call.arguments # llm generated tool arguments parsed by adapter
-
+        
         validated_args=args_schema.model_validate(arguments) # this fxn compare my base model(schema) with ai generated tool args
-        result=function(**validated_args.model_dump()) # model dump is used to convert base model schema to py dict
+        dependencies=dependency_resolver.resolve(tool.dependencies,ctx)
+        result=function(**dependencies,**validated_args.model_dump()) # model dump is used to convert base model schema to py dict
         logger.info(f"Tool {name}({tool_call.arguments}) → {result}")
         
         return str(result)
