@@ -23,6 +23,7 @@ class OpenAIAdapter(LLM):
             base_url=base_url,
             api_key=api_key
         )
+        # ---covert agent standard messages into openAI compatible 
     def _to_openAI_messages(self,messages:list[Message])->list[dict]:
         output:list[dict]=[]
         for m in messages:
@@ -74,7 +75,7 @@ class OpenAIAdapter(LLM):
         }
         for tool in tools
     ]
-    def _to_tool_call(self,raw):
+    def _to_tool_call_model(self,raw):
         if not raw:
             return []
         return [
@@ -102,8 +103,8 @@ class OpenAIAdapter(LLM):
         return ResponseModel(
             id=response.id,
             content=choice.message.content,
-            tool_calls=self._to_tool_call(choice.message.tool_calls),
-            finish_reason=choice.finish_reason,          # ← ADD THIS LINE
+            tool_calls=self._to_tool_call_model(choice.message.tool_calls),
+            finish_reason=choice.finish_reason,        
             model=response.model,
             usage=Usage(
                 prompt_tokens=response.usage.prompt_tokens,

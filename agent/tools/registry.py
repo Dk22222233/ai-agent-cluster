@@ -7,7 +7,7 @@ def build_registry():
     for name, tool in  spreadsheet_tools.items():
         if name in registry:
             raise ValueError(f'Duplicate tool name:{name}')
-
+        # establish key:value pairs,
         registry[name]=tool
     return registry
 

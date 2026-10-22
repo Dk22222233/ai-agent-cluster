@@ -12,8 +12,9 @@ logger=get_logger(__name__)
 llm=OpenAIAdapter(model_name=settings.llm.MODEL_NAME,base_url=settings.llm.BASE_URL,api_key=settings.llm.API_KEY)
 
 def agent_runtime(input:str, history:list[Message],ctx:ExecutionContext)->AgentResult:
-    
+    #---build final input for agent with history, system and user message....
     inputs=input_message(user_input=input,history=history)
+    
     agent_resp=run_agent(inputs,llm,ctx)
     # logger.info(f"Response from LLM: {agent_resp}")
     return agent_resp

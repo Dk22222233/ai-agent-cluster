@@ -32,10 +32,12 @@ def run_agent(message:list[Message],llm:LLM,ctx:ExecutionContext)->AgentResult:
 
     for step in range(1,settings.agent.MAX_STEPS+1):
         # passing the tool registry to request llm
+        #---preparing request for llm acc request model 
         request=LLMRequestModel(
             message_request=message,
             tools=tools
         )
+        #and llm will respond with ResponseModel
         llm_response=llm.call_llm(llm_request=request)
         print(f"DEBUG: content={llm_response.content!r}")
         print(f"DEBUG: tool_calls={llm_response.tool_calls!r}")
@@ -62,6 +64,7 @@ def run_agent(message:list[Message],llm:LLM,ctx:ExecutionContext)->AgentResult:
             #----------------------Tool Dispatch-----------------------------
             for tc in llm_response.tool_calls:
                 result=execute_tool(tc,ctx)
+                # building and appending the tool message by using id from ResponseModel(LLM) and result from executor 
                 message.append(ToolMessage(
                     role='tool',
                     tool_call_id=tc.id,
