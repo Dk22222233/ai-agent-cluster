@@ -15,11 +15,13 @@
   }
   .hidden { display: none !important; }
 
+  /* --- Views --- */
   .view { min-height: 100vh; }
   #login-view { display: grid; place-items: center; padding: 20px; }
   #loading-view { display: grid; place-items: center; }
-  .loading { color: #8a8a94; font-size: 14px; }
+  .loading { color: #8a8a94; font-size: 14px; animation: pulse 1.5s infinite; }
 
+  /* --- Login Card --- */
   .card {
     background: #17171d;
     padding: 36px;
@@ -90,6 +92,7 @@
   .toggle a { color: #7c5cff; text-decoration: none; }
   .toggle a:hover { text-decoration: underline; }
 
+  /* --- Chat Layout --- */
   .chat-layout { height: 100vh; display: flex; flex-direction: column; }
 
   .header {
@@ -115,10 +118,14 @@
     font-size: 13px;
     font-family: inherit;
     transition: background 0.15s;
+    display: flex;
+    align-items: center;
+    gap: 6px;
   }
-  .ghost:hover { background: #1b1b23; }
+  .ghost:hover:not(:disabled) { background: #1b1b23; }
   .ghost:disabled { opacity: 0.5; cursor: not-allowed; }
 
+  /* --- Messages --- */
   .messages {
     flex: 1;
     overflow-y: auto;
@@ -185,6 +192,7 @@
     max-width: 90%;
   }
 
+  /* --- Footer --- */
   .footer {
     display: flex;
     gap: 10px;
@@ -224,15 +232,57 @@
   .send-btn:hover:not(:disabled) { opacity: 0.92; }
   .send-btn:disabled { opacity: 0.5; cursor: not-allowed; }
 
+  /* --- Toast Notifications --- */
+  .toast-container {
+    position: fixed;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    z-index: 1000;
+    pointer-events: none;
+  }
+  .toast {
+    background: #1b1b23;
+    color: #fff;
+    padding: 12px 20px;
+    border-radius: 10px;
+    font-size: 14px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+    border: 1px solid #2c2c36;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    animation: slideUp 0.3s ease-out forwards;
+    pointer-events: auto;
+  }
+  .toast.success { border-color: #34A853; }
+  .toast.error { border-color: #ff6b6b; }
+  
+  @keyframes slideUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes fadeOut {
+    from { opacity: 1; transform: translateY(0); }
+    to { opacity: 0; transform: translateY(10px); }
+  }
+
   @media (max-width: 640px) {
     .card { padding: 26px 22px; }
     .bubble { max-width: 85%; }
     .header { padding: 12px 14px; }
     .footer { padding: 12px; }
+    .header-actions { flex-direction: column; }
   }
 </style>
 </head>
 <body>
+
+<!-- ============ TOAST CONTAINER ============ -->
+<div id="toast-container" class="toast-container"></div>
 
 <!-- ============ LOGIN ============ -->
 <section id="login-view" class="view">
@@ -311,9 +361,6 @@ const SUPABASE_URL      = 'https://unotugzxvepijwsdandf.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_ccM2Fqdy7o3qu_nsTi-HJw_BMqGC2EB';
 const API_BASE_URL      = 'http://localhost:8000';
 
-/* ============================================================
-   Supabase
-   ============================================================ */
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
@@ -340,6 +387,7 @@ const messageInput   = $('message-input');
 const sendBtn        = $('send-btn');
 const signoutBtn     = $('signout-btn');
 const googleConnectBtn = $('google-connect-btn');
+const toastContainer = $('toast-container');
 
 /* ============================================================
    State
@@ -350,15 +398,27 @@ let conversationId = null;
 let busy = false;
 
 /* ============================================================
-   View switching
+   UI Helpers
    ============================================================ */
 function show(view) {
   [loginView, loadingView, chatView].forEach((v) => v.classList.add('hidden'));
   view.classList.remove('hidden');
 }
 
+function showToast(message, type = 'success') {
+  const toast = document.createElement('div');
+  toast.className = `toast ${type}`;
+  toast.innerHTML = `<span>${type === 'success' ? '✅' : '❌'}</span> <span>${message}</span>`;
+  toastContainer.appendChild(toast);
+  
+  setTimeout(() => {
+    toast.style.animation = 'fadeOut 0.3s ease-in forwards';
+    setTimeout(() => toast.remove(), 300);
+  }, 3500);
+}
+
 /* ============================================================
-   API helpers
+   API Helpers
    ============================================================ */
 async function authHeaders() {
   const { data } = await supabase.auth.getSession();
@@ -386,7 +446,6 @@ async function apiCall(path, options = {}) {
 }
 
 const api = {
-  // Wrapped separately so we can call it without throwing
   getMe: () => apiCall('/user/me'),
   chat: (message, conversation_id) =>
     apiCall('/agent/chat', {
@@ -397,7 +456,7 @@ const api = {
 };
 
 /* ============================================================
-   Auth
+   Auth Flow
    ============================================================ */
 function userFromSession(session) {
   const u = session.user;
@@ -408,8 +467,6 @@ function userFromSession(session) {
   };
 }
 
-// Show the app instantly from Supabase session — no backend wait.
-// Then best-effort sync /user/me in the background (non-fatal).
 function applySession(session) {
   if (!session?.user) {
     currentUser = null;
@@ -424,11 +481,15 @@ function applySession(session) {
   currentUser = userFromSession(session);
   userLabel.textContent = currentUser.name ?? currentUser.email;
   show(chatView);
+  messageInput.focus();
 
-  // Handle Google-integration return
+  // --- FIX: Handle Google integration return ---
   const params = new URLSearchParams(window.location.search);
-  if (params.get('google') === 'connected') {
-    appendMessage('bot', '✅ Google account connected successfully.');
+  if (params.get('google') === 'success') {
+    showToast('Google account connected successfully!', 'success');
+    window.history.replaceState({}, '', window.location.pathname); // Clean URL
+  } else if (params.get('google') === 'error') {
+    showToast('Failed to connect Google account.', 'error');
     window.history.replaceState({}, '', window.location.pathname);
   }
 
@@ -442,12 +503,9 @@ function applySession(session) {
           email: me.email ?? currentUser.email,
         };
         userLabel.textContent = currentUser.name ?? currentUser.email;
-        console.log('[sync] /user/me ok:', currentUser);
       }
     })
-    .catch((e) => {
-      console.warn('[sync] /user/me failed (ignored):', e.message);
-    });
+    .catch((e) => console.warn('[sync] /user/me failed (ignored):', e.message));
 }
 
 function setAuthBusy(isBusy) {
@@ -520,7 +578,7 @@ async function signOut() {
 }
 
 /* ============================================================
-   Chat
+   Chat Flow
    ============================================================ */
 function appendMessage(role, content, { thinking = false } = {}) {
   emptyState.classList.add('hidden');
@@ -533,15 +591,6 @@ function appendMessage(role, content, { thinking = false } = {}) {
   messagesEl.appendChild(row);
   messagesEl.scrollTop = messagesEl.scrollHeight;
   return { row, bubble };
-}
-
-function showChatError(message) {
-  const el = document.createElement('div');
-  el.className = 'err-bar';
-  el.textContent = message;
-  messagesEl.appendChild(el);
-  messagesEl.scrollTop = messagesEl.scrollHeight;
-  setTimeout(() => el.remove(), 8000);
 }
 
 async function sendMessage() {
@@ -560,15 +609,17 @@ async function sendMessage() {
     const res = await api.chat(text, conversationId);
     conversationId = res.conversation_id;
     thinkingRow.remove();
-    // Backend may return `response` or a raw message
+    
+    // Extract the bot reply safely
     const botText =
       res?.response?.content ??
       res?.response ??
       (typeof res === 'string' ? res : JSON.stringify(res));
+      
     appendMessage('bot', botText);
   } catch (e) {
     thinkingRow.remove();
-    showChatError(e.message ?? 'Chat failed');
+    showToast(e.message ?? 'Chat failed', 'error');
   } finally {
     busy = false;
     sendBtn.disabled = !messageInput.value.trim();
@@ -577,26 +628,27 @@ async function sendMessage() {
 }
 
 /* ============================================================
-   Google integration
+   Google Integration Flow
    ============================================================ */
 async function connectGoogle() {
   googleConnectBtn.disabled = true;
-  const original = googleConnectBtn.textContent;
-  googleConnectBtn.textContent = 'Redirecting…';
+  const original = googleConnectBtn.innerHTML;
+  googleConnectBtn.innerHTML = 'Connecting…';
+  
   try {
     const data = await api.googleConnectUrl();
     const url = data.url || data;
     if (!url) throw new Error('Backend did not return an OAuth URL');
     window.location.href = url;
   } catch (e) {
-    showChatError(e.message ?? 'Failed to start Google connect');
+    showToast(e.message ?? 'Failed to start Google connect', 'error');
     googleConnectBtn.disabled = false;
-    googleConnectBtn.textContent = original;
+    googleConnectBtn.innerHTML = original;
   }
 }
 
 /* ============================================================
-   Events
+   Event Listeners
    ============================================================ */
 authForm.addEventListener('submit', handleAuthSubmit);
 googleBtn.addEventListener('click', signInWithGoogle);
@@ -623,7 +675,7 @@ messageInput.addEventListener('keydown', (e) => {
 });
 
 /* ============================================================
-   Auth state changes
+   Auth State Changes
    ============================================================ */
 supabase.auth.onAuthStateChange((event, session) => {
   console.log('[auth]', event, session?.user?.email ?? '(no session)');
