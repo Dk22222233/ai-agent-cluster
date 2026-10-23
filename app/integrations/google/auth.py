@@ -6,8 +6,11 @@ import hashlib
 import base64
 import secrets
 from datetime import datetime,timedelta, timezone
-SCOPES=[
-    'https://www.googleapis.com/auth/spreadsheets.readonly'
+SCOPES = [
+    'openid',  # Add
+    'https://www.googleapis.com/auth/userinfo.email',  # Add
+    'https://www.googleapis.com/auth/userinfo.profile', # Add
+    'https://www.googleapis.com/auth/spreadsheets',
 ]
 class GoogleAuth:
     def __init__(self,state_store):
@@ -27,6 +30,7 @@ class GoogleAuth:
         flow=Flow.from_client_config(
             self.client_config,
             scopes=SCOPES,
+            redirect_uri=settings.GOOGLE_REDIRECT_URI
         )
         # generate state and PKCE verifier
         # used to prevent CSRF attacks

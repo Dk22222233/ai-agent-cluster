@@ -1,4 +1,5 @@
 from fastapi import APIRouter, Depends, Query, HTTPException
+from fastapi.responses import RedirectResponse
 from app.api.schemas.user_schema import UserResponse
 from app.api.schemas import OAuthResponse
 from sqlalchemy.orm import Session
@@ -13,7 +14,7 @@ def google_connect(current_user:UserResponse=Depends(get_current_user)):
     auth_url=integration_service.start_google_oauth(user_id)
     return {'url':auth_url}
 
-@router.get('/google/callback',response_model=OAuthResponse)
+@router.get('/google/callback') #,response_model=OAuthResponse
 async def google_callback(
     code:str=Query(default=None),
     state:str=Query(...),
@@ -27,10 +28,12 @@ async def google_callback(
     if not code:
         raise HTTPException (status_code=400,detail='Missing Authorization Code')
     try:
-        return await integration_service.finish_google_oauth(
+        await integration_service.finish_google_oauth(
         code=code,
         state=state,
         db=db
         )
+        frontend_url="http://localhost:5173/?google=success"
+        return RedirectResponse(url=frontend_url)
     except ValueError as e:
         raise HTTPException(status_code=400,detail=str(e))

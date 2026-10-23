@@ -7,7 +7,7 @@ from integrated_apps.google.spreadsheet_app.spreadsheet_service import (
 def build_spreadsheet_service(ctx) -> SpreadsheetService:
     credential_factory = GoogleCredentialFactory(
         db=ctx.db,
-        user_id=ctx.user_id,
+        # user_id=ctx.user_id,
     )
 
     return SpreadsheetService(

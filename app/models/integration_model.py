@@ -29,4 +29,11 @@ class IntegrationModel(Base):
 
     created_at:Mapped[datetime]=mapped_column(DateTime(timezone=True),server_default=func.now(),nullable=False)
 
-    updated_at:Mapped[datetime]=mapped_column(DateTime(timezone=True),server_onupdate=func.now(),onupdate=func.now(),nullable=False)
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        default=datetime.utcnow,      # <--- Python-side default
+        onupdate=datetime.utcnow,     # <--- Python-side update
+        nullable=False
+    )
+
+    

@@ -6,13 +6,14 @@ class MessageRepo:
     # def __init__(self,db:Session):
     #     self.db=db
 
-    def create_msg(self,conversation_id:uuid.UUID,role:str,content:str,tool_calls,tool_call_id,db:Session)->MessageModel:
+    def create_msg(self,conversation_id:uuid.UUID,role:str,content:str,tool_calls,tool_call_id,db:Session,status:str='completed')->MessageModel:
         msg_orm=MessageModel(
             conversation_id=conversation_id,
             role=role,
             content=content,
             tool_calls=tool_calls,
-            tool_call_id=tool_call_id
+            tool_call_id=tool_call_id,
+            status=status
         )
         db.add(msg_orm)
         db.commit()
@@ -23,7 +24,7 @@ class MessageRepo:
         '''
         Return the most recent `n` messages in the chronographical order'''
         stmt=(select(MessageModel).
-              where(conversation_id==conversation_id).
+              where(MessageModel.conversation_id==conversation_id).
               order_by(MessageModel.created_at.desc()).
               limit(n)
               )

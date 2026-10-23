@@ -1,6 +1,6 @@
 from sqlalchemy import create_engine
 from sqlalchemy.orm import  sessionmaker,declarative_base
-DB_URL="postgresql+psycopg://fastapi:mysecretpassword@localhost:5432/fastapi_db"
+DB_URL="postgresql://postgres:new_pass_123@localhost:5432/postgres"
 engine =create_engine(DB_URL)
 SessionLocal=sessionmaker(
     bind=engine,

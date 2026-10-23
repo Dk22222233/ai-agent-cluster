@@ -1,4 +1,3 @@
-
 from datetime import datetime
 from uuid import UUID
 
@@ -10,19 +9,28 @@ from config import settings
 from app.repositories.integration_repo import integration_repo
 from app.integrations.google.auth import SCOPES
 
+# Import your project's logger
+from agent import get_logger
+
+logger = get_logger(__name__)
 
 class GoogleCredentialFactory:
-    def __init__(self, db: Session):
+    def __init__(self, db):
+        # Log exactly what the factory receives
+        logger.debug(f"Initializing GoogleCredentialFactory with db={db} (type={type(db)})")
         self.db = db
         self.repo = integration_repo
 
     def get_credentials(self, user_id: UUID) -> Credentials:
+        logger.debug(f"get_credentials called for user_id={user_id}, using self.db={self.db}")
+        
         conn = self.repo.get_google_connection(
             user_id=user_id,
             db=self.db,
         )
 
         if not conn or not conn.refresh_token:
+            logger.warning(f"No Google connection or refresh_token found for user {user_id}")
             raise ValueError("Google account is not connected.")
 
         credentials = Credentials(
@@ -36,6 +44,7 @@ class GoogleCredentialFactory:
         )
 
         if not credentials.valid:
+            logger.info(f"Refreshing expired Google token for user {user_id}")
             credentials.refresh(Request())
 
             self.repo.update_google_tokens(
@@ -44,5 +53,6 @@ class GoogleCredentialFactory:
                 expires_at=credentials.expiry,
                 db=self.db,
             )
+            logger.info(f"Token refreshed and saved for user {user_id}")
 
         return credentials
