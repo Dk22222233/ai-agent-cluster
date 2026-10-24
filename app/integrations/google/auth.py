@@ -1,11 +1,16 @@
 from config import settings
 from app.integrations.google.state_store import state_store
+import os
 from uuid import UUID
 from google_auth_oauthlib.flow import Flow
 import hashlib
 import base64
 import secrets
 from datetime import datetime,timedelta, timezone
+
+# Google may include previously granted OpenID scopes with an incremental app consent response.
+# OAuthlib otherwise raises before we can validate that the selected app's scopes are still present.
+os.environ.setdefault("OAUTHLIB_RELAX_TOKEN_SCOPE", "1")
 SCOPES = [
     'openid',  # Add
     'https://www.googleapis.com/auth/userinfo.email',  # Add
@@ -25,11 +30,12 @@ class GoogleAuth:
 
             }
         }
-    def get_authorization_url(self,user_id:UUID)->str:
+    def get_authorization_url(self,user_id:UUID,integration_key:str,scopes:list[str])->str:
+        # Request only the scopes configured for the selected integrated app.
         #built flow without a state
         flow=Flow.from_client_config(
             self.client_config,
-            scopes=SCOPES,
+            scopes=scopes,
             redirect_uri=settings.GOOGLE_REDIRECT_URI
         )
         # generate state and PKCE verifier
@@ -44,6 +50,8 @@ class GoogleAuth:
             state=state,
             user_id=user_id,
             code_verifier=code_verifier,
+            integration_key=integration_key,
+            scopes=scopes,
             expires_at=datetime.now(timezone.utc)+timedelta(minutes=10)
         )
         # oauth url construction
@@ -63,13 +71,16 @@ class GoogleAuth:
             raise ValueError("Invalid, expire or already used OAuth state")
         return {
             'user_id':UUID(str(data['user_id'])),
-            'code_verifier':str(data['code_verifier'])
+            'code_verifier':str(data['code_verifier']),
+            'integration_key':str(data['integration_key']),
+            'scopes':list(data['scopes']),
         }
 
-    def exchange_code(self, code:str, state:str,code_verifier):
+    def exchange_code(self, code: str, state: str, code_verifier: str, scopes: list[str]):
+        # Reuse the app's requested scopes so credentials retain the consent context from authorization.
         flow=Flow.from_client_config(
             self.client_config,
-            scopes= SCOPES,
+            scopes=scopes,
             state=state
         )
         flow.redirect_uri=settings.GOOGLE_REDIRECT_URI

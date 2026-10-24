@@ -31,6 +31,9 @@
     box-shadow: 0 10px 40px rgba(0, 0, 0, 0.4);
   }
   .card h1 { font-size: 26px; letter-spacing: -0.3px; }
+  .brand-mark { width: 42px; height: 42px; display: grid; place-items: center; border-radius: 13px; background: linear-gradient(135deg, #7c5cff, #5c8bff); margin-bottom: 18px; font-size: 21px; }
+  .field-label { color: #cfcfd6; font-size: 12px; margin: 3px 0 -5px; }
+  .auth-note { color: #8a8a94; font-size: 12px; line-height: 1.5; margin-top: 12px; }
   .sub { color: #8a8a94; margin: 8px 0 24px; font-size: 14px; }
 
   .google-btn {
@@ -107,6 +110,22 @@
   .brand { font-weight: 700; font-size: 16px; }
   .user { color: #8a8a94; font-size: 12px; margin-top: 2px; }
   .header-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+  /* The app rail turns the backend integration catalog into real frontend controls. */
+  .workspace { display: flex; flex: 1; min-height: 0; }
+  .integration-panel { width: 285px; flex-shrink: 0; padding: 18px 14px; border-right: 1px solid #1f1f28; overflow-y: auto; }
+  .panel-heading { font-size: 13px; font-weight: 700; margin: 0 0 4px; }
+  .panel-sub { font-size: 11px; color: #858591; margin-bottom: 14px; line-height: 1.5; }
+  .integration-card { background: #17171d; border: 1px solid #262630; border-radius: 12px; padding: 12px; margin-bottom: 9px; }
+  .integration-top { display: flex; align-items: center; gap: 9px; }
+  .integration-icon { width: 31px; height: 31px; display: grid; place-items: center; background: #22222c; border-radius: 9px; font-size: 16px; }
+  .integration-name { font-weight: 600; font-size: 12px; flex: 1; }
+  .integration-state { font-size: 10px; color: #8a8a94; margin-top: 2px; }
+  .integration-controls { display: flex; gap: 6px; margin-top: 10px; }
+  .integration-controls button { flex: 1; justify-content: center; padding: 7px 8px; font-size: 11px; }
+  .status-dot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: #777; margin-right: 5px; }
+  .status-dot.on { background: #34a853; box-shadow: 0 0 8px #34a85380; }
+  .messages-column { display: flex; flex-direction: column; flex: 1; min-width: 0; }
+  .notice { padding: 9px 12px; margin: 12px 18px 0; background: #201e30; color: #c5bcff; border: 1px solid #38324e; border-radius: 9px; font-size: 12px; line-height: 1.45; }
 
   .ghost {
     background: transparent;
@@ -276,6 +295,9 @@
     .header { padding: 12px 14px; }
     .footer { padding: 12px; }
     .header-actions { flex-direction: column; }
+    .integration-panel { width: 100%; max-height: 190px; border-right: 0; border-bottom: 1px solid #1f1f28; }
+    .workspace { flex-direction: column; }
+    .chat-layout { height: 100dvh; }
   }
 </style>
 </head>
@@ -287,8 +309,9 @@
 <!-- ============ LOGIN ============ -->
 <section id="login-view" class="view">
   <div class="card">
-    <h1>AI Agent</h1>
-    <p class="sub">Sign in to chat with your agent</p>
+    <div class="brand-mark" aria-hidden="true">✦</div>
+    <h1 id="auth-title">Welcome back</h1>
+    <p class="sub" id="auth-subtitle">Sign in to continue to your AI workspace.</p>
 
     <button id="google-btn" class="google-btn">
       <svg width="18" height="18" viewBox="0 0 48 48" aria-hidden="true">
@@ -303,12 +326,17 @@
     <div class="divider">or</div>
 
     <form id="auth-form" class="form" autocomplete="on">
-      <input id="name-input" class="input hidden" type="text" placeholder="Name" autocomplete="name" />
-      <input id="email-input" class="input" type="email" placeholder="Email" required autocomplete="email" />
-      <input id="password-input" class="input" type="password" placeholder="Password" required autocomplete="current-password" minlength="6" />
+      <label id="name-label" class="field-label hidden" for="name-input">Your name</label>
+      <input id="name-input" class="input hidden" type="text" placeholder="Jane Smith" autocomplete="name" />
+      <label class="field-label" for="email-input">Email address</label>
+      <input id="email-input" class="input" type="email" placeholder="you@example.com" required autocomplete="email" />
+      <label class="field-label" for="password-input">Password</label>
+      <input id="password-input" class="input" type="password" placeholder="At least 6 characters" required autocomplete="current-password" minlength="6" />
       <div id="login-error" class="error hidden"></div>
       <button id="submit-btn" class="primary" type="submit">Sign In</button>
     </form>
+    <button id="reset-password" class="toggle" type="button" style="background:none;border:0;cursor:pointer;width:100%;">Forgot your password?</button>
+    <p class="auth-note">Your session is managed securely by Supabase. Your password is never sent to this app's backend.</p>
 
     <p class="toggle">
       <span id="toggle-text">Don't have an account? </span>
@@ -329,12 +357,16 @@
       <div class="brand">AI Agent</div>
       <div id="user-label" class="user"></div>
     </div>
-    <div class="header-actions">
-      <button id="google-connect-btn" class="ghost">🔗 Connect Google</button>
-      <button id="signout-btn" class="ghost">Sign out</button>
-    </div>
+    <div class="header-actions"><button id="signout-btn" class="ghost">Sign out</button></div>
   </header>
-
+  <div id="integration-notice" class="notice hidden"></div>
+  <div class="workspace">
+    <aside class="integration-panel" aria-label="Connected apps">
+      <h2 class="panel-heading">Connected apps</h2>
+      <p class="panel-sub">Connect Google apps to let your agent work with your files.</p>
+      <div id="integration-list"><div class="panel-sub">Loading integrations…</div></div>
+    </aside>
+    <section class="messages-column" aria-label="AI chat">
   <main id="messages" class="messages">
     <div id="empty-state" class="empty">
       <div class="emoji">👋</div>
@@ -351,6 +383,8 @@
     ></textarea>
     <button id="send-btn" class="send-btn" disabled>Send</button>
   </footer>
+    </section>
+  </div>
 </section>
 
 <script type="module">
@@ -359,7 +393,8 @@
    ============================================================ */
 const SUPABASE_URL      = 'https://unotugzxvepijwsdandf.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_ccM2Fqdy7o3qu_nsTi-HJw_BMqGC2EB';
-const API_BASE_URL      = 'http://localhost:8000';
+// The API URL can be overridden at deploy time with ?api=https://your-api.example.com.
+const API_BASE_URL      = new URLSearchParams(window.location.search).get('api') || 'http://localhost:8000';
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
@@ -386,8 +421,12 @@ const emptyState     = $('empty-state');
 const messageInput   = $('message-input');
 const sendBtn        = $('send-btn');
 const signoutBtn     = $('signout-btn');
-const googleConnectBtn = $('google-connect-btn');
 const toastContainer = $('toast-container');
+const integrationList = $('integration-list');
+const resetPasswordBtn = $('reset-password');
+const nameLabel = $('name-label');
+const authTitle = $('auth-title');
+const authSubtitle = $('auth-subtitle');
 
 /* ============================================================
    State
@@ -452,7 +491,13 @@ const api = {
       method: 'POST',
       body: JSON.stringify({ message, conversation_id: conversation_id ?? null }),
     }),
-  googleConnectUrl: () => apiCall('/integrator/google/connect'),
+  // The registered app key selects the exact OAuth scopes and app installation to connect.
+  integrations: () => apiCall('/integrator/catalog'),
+  googleConnectUrl: (key) => apiCall(`/integrator/google/connect/${encodeURIComponent(key)}`),
+  setIntegrationEnabled: (key, enabled) => apiCall(`/integrator/${encodeURIComponent(key)}/enabled`, {
+    method: 'PUT', body: JSON.stringify({ enabled }),
+  }),
+  disconnectIntegration: (key) => apiCall(`/integrator/${encodeURIComponent(key)}`, { method: 'DELETE' }),
 };
 
 /* ============================================================
@@ -473,6 +518,7 @@ function applySession(session) {
     conversationId = null;
     messagesEl.querySelectorAll('.row, .err-bar').forEach((el) => el.remove());
     emptyState.classList.remove('hidden');
+    integrationList.replaceChildren();
     show(loginView);
     return;
   }
@@ -481,7 +527,7 @@ function applySession(session) {
   currentUser = userFromSession(session);
   userLabel.textContent = currentUser.name ?? currentUser.email;
   show(chatView);
-  messageInput.focus();
+  loadIntegrations();
 
   // --- FIX: Handle Google integration return ---
   const params = new URLSearchParams(window.location.search);
@@ -490,6 +536,20 @@ function applySession(session) {
     window.history.replaceState({}, '', window.location.pathname); // Clean URL
   } else if (params.get('google') === 'error') {
     showToast('Failed to connect Google account.', 'error');
+    window.history.replaceState({}, '', window.location.pathname);
+  }
+  // OAuth callbacks redirect back with an app-specific result so the user sees what happened.
+  if (params.has('integration_status')) {
+    const success = params.get('integration_status') === 'success';
+    // Backend sends safe reason codes only; map them to useful guidance without revealing OAuth internals.
+    const oauthErrors = {
+      expired_or_used_state: 'That connection link expired. Choose Connect again and complete it in the same browser.',
+      missing_refresh_token: 'Google did not return offline access. Remove this app from your Google account, then connect again.',
+      missing_granted_scopes: 'Google did not confirm the requested app permissions. Please retry and approve them.',
+      oauth_validation_failed: 'Google returned an invalid OAuth response. Please try connecting again.',
+      token_exchange_or_persistence_failed: 'Google authorization completed, but the app could not save the connection. Check the backend log for the exact cause.',
+    };
+    showToast(success ? `${params.get('integration') || 'Google app'} connected.` : (oauthErrors[params.get('reason')] || 'Google app connection failed.'), success ? 'success' : 'error');
     window.history.replaceState({}, '', window.location.pathname);
   }
 
@@ -527,12 +587,17 @@ async function handleAuthSubmit(e) {
       });
       if (error) throw error;
     } else {
-      const { error } = await supabase.auth.signUp({
+      const { data, error } = await supabase.auth.signUp({
         email: emailInput.value.trim(),
         password: passwordInput.value,
         options: { data: { full_name: nameInput.value.trim() } },
       });
       if (error) throw error;
+      // When email confirmation is enabled, Supabase creates the account before creating a session.
+      if (!data.session) {
+        showToast('Account created. Check your email to confirm it, then sign in.', 'success');
+        updateAuthMode('login');
+      }
     }
   } catch (e) {
     loginError.textContent = e.message ?? 'Failed';
@@ -547,12 +612,18 @@ function updateAuthMode(newMode) {
   loginError.classList.add('hidden');
   if (mode === 'signup') {
     nameInput.classList.remove('hidden');
+    nameLabel.classList.remove('hidden');
+    authTitle.textContent = 'Create your account';
+    authSubtitle.textContent = 'Set up your secure AI workspace in a moment.';
     submitBtn.textContent = 'Create Account';
     toggleText.textContent = 'Already have an account? ';
     toggleLink.textContent = 'Log in';
     passwordInput.autocomplete = 'new-password';
   } else {
     nameInput.classList.add('hidden');
+    nameLabel.classList.add('hidden');
+    authTitle.textContent = 'Welcome back';
+    authSubtitle.textContent = 'Sign in to continue to your AI workspace.';
     submitBtn.textContent = 'Sign In';
     toggleText.textContent = "Don't have an account? ";
     toggleLink.textContent = 'Sign up';
@@ -571,6 +642,27 @@ async function signInWithGoogle() {
     loginError.classList.remove('hidden');
     googleBtn.disabled = false;
   }
+}
+
+// Password recovery uses Supabase's hosted email flow and returns the user to this page.
+async function resetPassword() {
+  loginError.classList.add('hidden');
+  const email = emailInput.value.trim();
+  if (!email) {
+    loginError.textContent = 'Enter your email address first.';
+    loginError.classList.remove('hidden');
+    emailInput.focus();
+    return;
+  }
+  resetPasswordBtn.disabled = true;
+  try {
+    const { error } = await supabase.auth.resetPasswordForEmail(email, { redirectTo: window.location.origin + window.location.pathname });
+    if (error) throw error;
+    showToast('If an account exists for that email, a reset link is on its way.', 'success');
+  } catch (error) {
+    loginError.textContent = error.message || 'Could not send the reset email.';
+    loginError.classList.remove('hidden');
+  } finally { resetPasswordBtn.disabled = false; }
 }
 
 async function signOut() {
@@ -630,21 +722,66 @@ async function sendMessage() {
 /* ============================================================
    Google Integration Flow
    ============================================================ */
-async function connectGoogle() {
-  googleConnectBtn.disabled = true;
-  const original = googleConnectBtn.innerHTML;
-  googleConnectBtn.innerHTML = 'Connecting…';
-  
+async function connectGoogle(integration) {
   try {
-    const data = await api.googleConnectUrl();
-    const url = data.url || data;
+    const data = await api.googleConnectUrl(integration.key);
+    const url = data.authorization_url || data.url;
     if (!url) throw new Error('Backend did not return an OAuth URL');
     window.location.href = url;
   } catch (e) {
     showToast(e.message ?? 'Failed to start Google connect', 'error');
-    googleConnectBtn.disabled = false;
-    googleConnectBtn.innerHTML = original;
   }
+}
+
+// Render each app from the backend catalog; OAuth tokens remain server-side only.
+async function loadIntegrations() {
+  integrationList.innerHTML = '<div class="panel-sub">Loading integrations…</div>';
+  try {
+    const integrations = await api.integrations();
+    if (!integrations.length) { integrationList.innerHTML = '<div class="panel-sub">No integrations are available.</div>'; return; }
+    integrationList.replaceChildren(...integrations.map(renderIntegration));
+  } catch (error) {
+    integrationList.innerHTML = '<div class="panel-sub">Could not load apps. Check that the API is running.</div>';
+    console.warn('[integrations] catalog failed:', error.message);
+  }
+}
+
+function renderIntegration(item) {
+  const icons = { google_sheets: '▦', google_drive: '△', google_docs: '▤' };
+  const card = document.createElement('article');
+  card.className = 'integration-card';
+  const top = document.createElement('div'); top.className = 'integration-top';
+  const icon = document.createElement('span'); icon.className = 'integration-icon'; icon.textContent = icons[item.key] || '◎';
+  const name = document.createElement('div'); name.className = 'integration-name';
+  const label = document.createElement('div'); label.textContent = item.name;
+  const state = document.createElement('div'); state.className = 'integration-state';
+  const stateText = item.enabled ? 'Connected · enabled' : item.connected ? 'Connected · paused' : 'Not connected';
+  const dot = document.createElement('span'); dot.className = `status-dot ${item.connected && item.enabled ? 'on' : ''}`;
+  state.append(dot, document.createTextNode(stateText)); name.append(label, state); top.append(icon, name);
+  const controls = document.createElement('div'); controls.className = 'integration-controls';
+  const action = document.createElement('button'); action.className = 'ghost'; action.type = 'button';
+  action.textContent = item.connected ? (item.enabled ? 'Pause' : 'Enable') : 'Connect';
+  action.addEventListener('click', async () => {
+    action.disabled = true;
+    try {
+      if (!item.connected) return await connectGoogle(item);
+      await api.setIntegrationEnabled(item.key, !item.enabled); await loadIntegrations();
+    } catch (error) { showToast(error.message, 'error'); }
+    finally { action.disabled = false; }
+  });
+  controls.append(action);
+  if (item.connected) {
+    // The API disables this app installation while preserving the shared Google OAuth grant.
+    const disconnect = document.createElement('button'); disconnect.className = 'ghost'; disconnect.type = 'button'; disconnect.textContent = 'Disable';
+    disconnect.addEventListener('click', async () => {
+      disconnect.disabled = true;
+      try { await api.disconnectIntegration(item.key); await loadIntegrations(); showToast(`${item.name} paused.`, 'success'); }
+      catch (error) { showToast(error.message, 'error'); }
+      finally { disconnect.disabled = false; }
+    });
+    controls.append(disconnect);
+  }
+  card.append(top, controls); return card;
 }
 
 /* ============================================================
@@ -653,7 +790,7 @@ async function connectGoogle() {
 authForm.addEventListener('submit', handleAuthSubmit);
 googleBtn.addEventListener('click', signInWithGoogle);
 signoutBtn.addEventListener('click', signOut);
-googleConnectBtn.addEventListener('click', connectGoogle);
+resetPasswordBtn.addEventListener('click', resetPassword);
 sendBtn.addEventListener('click', sendMessage);
 
 toggleLink.addEventListener('click', (e) => {

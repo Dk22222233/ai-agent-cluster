@@ -1,5 +1,4 @@
 
-from uuid import UUID
 from typing import Any
 
 from pydantic import BaseModel, Field
@@ -37,7 +36,6 @@ class SortRange(BaseModel):
 
 def sort_range(
     service,
-    user_id: UUID,
     spreadsheet_id: str,
     range_name: str,
     sort_by_column: str,
@@ -49,7 +47,6 @@ def sort_range(
 
     Args:
         service: Injected spreadsheet service.
-        user_id: Authenticated application user ID.
         spreadsheet_id: ID of the spreadsheet.
         range_name: A1 range containing the data.
         sort_by_column: Header of the column used for sorting.
@@ -60,7 +57,6 @@ def sort_range(
         Result describing the completed sort operation.
     """
     return service.sort_range(
-        user_id=user_id,
         spreadsheet_id=spreadsheet_id,
         range_name=range_name,
         sort_by_column=sort_by_column,
@@ -113,7 +109,6 @@ class FilterRows(BaseModel):
 
 def filter_rows(
     service,
-    user_id: UUID,
     spreadsheet_id: str,
     sheet_name: str,
     column_name: str,
@@ -130,7 +125,6 @@ def filter_rows(
 
     Args:
         service: Injected spreadsheet service.
-        user_id: Authenticated application user ID.
         spreadsheet_id: ID of the spreadsheet.
         sheet_name: Name of the sheet to inspect.
         column_name: Header of the column to evaluate.
@@ -143,7 +137,6 @@ def filter_rows(
         Matching rows and their row numbers.
     """
     return service.filter_rows(
-        user_id=user_id,
         spreadsheet_id=spreadsheet_id,
         sheet_name=sheet_name,
         column_name=column_name,
@@ -180,7 +173,6 @@ class SummarizeColumn(BaseModel):
 
 def summarize_column(
     service,
-    user_id: UUID,
     spreadsheet_id: str,
     sheet_name: str,
     column_name: str,
@@ -191,7 +183,6 @@ def summarize_column(
 
     Args:
         service: Injected spreadsheet service.
-        user_id: Authenticated application user ID.
         spreadsheet_id: ID of the spreadsheet.
         sheet_name: Name of the sheet to analyze.
         column_name: Header of the numeric column.
@@ -202,7 +193,6 @@ def summarize_column(
         and maximum, as supported by the service.
     """
     return service.summarize_column(
-        user_id=user_id,
         spreadsheet_id=spreadsheet_id,
         sheet_name=sheet_name,
         column_name=column_name,

@@ -1,4 +1,5 @@
 from datetime import datetime
+from types import SimpleNamespace
 
 from sqlalchemy import select
 from sqlalchemy.orm import Session
@@ -14,21 +15,29 @@ cipher = Fernet(ENCRYPTION_KEY.encode())
 
 class IntegrationRepo:
     def get_google_connection(self, user_id: UUID, db: Session):
-        logger.debug(f"get_google_connection called with user_id={user_id}, db={db} (type={type(db)})")
         stmt = select(IntegrationModel).where(
             IntegrationModel.user_id == user_id,
             IntegrationModel.provider == 'Google'
         )
         connection = db.execute(stmt).scalar_one_or_none()
         
-        if connection and connection.refresh_token:
-            connection.refresh_token = cipher.decrypt(connection.refresh_token.encode()).decode()
-            if connection.access_token:
-                connection.access_token = cipher.decrypt(connection.access_token.encode()).decode()
-        return connection
+        if connection is None:
+            return None
+        # Decrypt into a detached view so ORM-tracked database fields stay encrypted.
+        return SimpleNamespace(
+            id=connection.id,
+            user_id=connection.user_id,
+            refresh_token=self._decrypt(connection.refresh_token),
+            access_token=self._decrypt(connection.access_token),
+            expires_at=connection.expires_at,
+        )
 
-    def save_google_connection(self, user_id: UUID, refresh_token: str, access_token: str | None, db: Session):
-        # 1. Check if the connection already exists
+    @staticmethod
+    def _decrypt(value: str | None) -> str | None:
+        return cipher.decrypt(value.encode()).decode() if value else None
+
+    def save_google_connection(self, user_id: UUID, refresh_token: str, access_token: str | None, db: Session, expires_at: datetime | None = None):
+        # Keep encrypted values in the ORM identity map; never decrypt ORM fields in place.
         stmt = select(IntegrationModel).where(
             IntegrationModel.user_id == user_id,
             IntegrationModel.provider == 'Google'
@@ -43,19 +52,20 @@ class IntegrationRepo:
             existing.refresh_token = encrypted_refresh
             if encrypted_access:
                 existing.access_token = encrypted_access
+            existing.expires_at = expires_at
         else:
             # 3. Create a new row
             connection = IntegrationModel(
                 user_id=user_id,
                 refresh_token=encrypted_refresh,
                 access_token=encrypted_access,
+                expires_at=expires_at,
                 provider='Google'
             )
             db.add(connection)
 
-        db.commit()
-        
-        # Return the row (either updated or newly created)
+        # The service commits this together with its matching app installation.
+        db.flush()
         return db.execute(stmt).scalar_one()
 
     def update_google_tokens(self, user_id: UUID, access_token: str, expires_at: datetime, db: Session):

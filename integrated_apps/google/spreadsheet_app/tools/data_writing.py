@@ -1,4 +1,3 @@
-from uuid import UUID
 from typing import Literal
 
 from pydantic import BaseModel, Field
@@ -18,7 +17,6 @@ class WriteRange(BaseModel):
 
 def write_range(
     service,
-    user_id: UUID,
     spreadsheet_id: str,
     range_name: str,
     values: list[list[str | int | float | bool | None]],
@@ -26,7 +24,6 @@ def write_range(
 ):
     """Write values to a specified spreadsheet range."""
     return service.write_range(
-        user_id=user_id,
         spreadsheet_id=spreadsheet_id,
         range_name=range_name,
         values=values,
@@ -45,7 +42,6 @@ class UpdateCell(BaseModel):
 
 def update_cell(
     service,
-    user_id: UUID,
     spreadsheet_id: str,
     cell_address: str,
     value: str | int | float | bool | None,
@@ -53,7 +49,6 @@ def update_cell(
 ):
     """Update the value of a single spreadsheet cell."""
     return service.update_cell(
-        user_id=user_id,
         spreadsheet_id=spreadsheet_id,
         cell_address=cell_address,
         value=value,
@@ -77,7 +72,6 @@ class AppendRows(BaseModel):
 
 def append_rows(
     service,
-    user_id: UUID,
     spreadsheet_id: str,
     range_name: str,
     values: list[list[str | int | float | bool | None]],
@@ -85,7 +79,6 @@ def append_rows(
 ):
     """Append rows after the existing table data."""
     return service.append_rows(
-        user_id=user_id,
         spreadsheet_id=spreadsheet_id,
         range_name=range_name,
         values=values,
@@ -102,13 +95,11 @@ class ClearRange(BaseModel):
 
 def clear_range(
     service,
-    user_id: UUID,
     spreadsheet_id: str,
     range_name: str,
 ):
     """Clear cell values while preserving formatting."""
     return service.clear_range(
-        user_id=user_id,
         spreadsheet_id=spreadsheet_id,
         range_name=range_name,
     )

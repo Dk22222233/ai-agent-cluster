@@ -3,6 +3,7 @@
 #     SpreadsheetService,
 # )
 from integrated_apps.google.spreadsheet_app.provider import build_spreadsheet_service
+from integrated_apps.google.drive_app.provider import build_drive_service
 
 
 class DependencyResolver:
@@ -20,9 +21,12 @@ class DependencyResolver:
                 raise ValueError(
                     f"Dependency provider not found: {name}"
                 )
-            #----after picking the right service for selected tool, the resolved save it in dict and provider(ctx)
-            #---the context is passed
-            resolved[name] = provider(ctx)
+            # Registry names choose a concrete provider (for example, "drive_service").
+            # Handlers deliberately use one generic `service` argument, so they stay focused on
+            # their tool contract rather than knowing which provider-registration name was used.
+            if "service" in resolved:
+                raise ValueError("A tool may declare only one injected service")
+            resolved["service"] = provider(ctx)
 
         return resolved
 
@@ -30,5 +34,7 @@ class DependencyResolver:
 dependency_resolver = DependencyResolver(
     providers={
         "spreadsheet_service": build_spreadsheet_service,
+        # Tool dependency names select the matching per-app service at dispatch time.
+        "drive_service": build_drive_service,
     }
 )

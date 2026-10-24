@@ -1,5 +1,3 @@
-from uuid import UUID
-
 from pydantic import BaseModel, Field
 
 
@@ -15,13 +13,11 @@ class CreateSheet(BaseModel):
 
 def create_sheet(
     service,
-    user_id: UUID,
     spreadsheet_id: str,
     title: str,
 ):
     """Create a new sheet tab in a spreadsheet."""
     return service.create_sheet(
-        user_id=user_id,
         spreadsheet_id=spreadsheet_id,
         title=title,
     )
@@ -40,14 +36,12 @@ class RenameSheet(BaseModel):
 
 def rename_sheet(
     service,
-    user_id: UUID,
     spreadsheet_id: str,
     sheet_id: int,
     new_title: str,
 ):
     """Rename an existing sheet tab."""
     return service.rename_sheet(
-        user_id=user_id,
         spreadsheet_id=spreadsheet_id,
         sheet_id=sheet_id,
         new_title=new_title,
@@ -70,14 +64,12 @@ class CopySheet(BaseModel):
 
 def copy_sheet(
     service,
-    user_id: UUID,
     spreadsheet_id: str,
     sheet_id: int,
     new_title: str | None = None,
 ):
     """Create a copy of an existing sheet tab."""
     return service.copy_sheet(
-        user_id=user_id,
         spreadsheet_id=spreadsheet_id,
         sheet_id=sheet_id,
         new_title=new_title,
@@ -96,13 +88,11 @@ class DeleteSheet(BaseModel):
 
 def delete_sheet(
     service,
-    user_id: UUID,
     spreadsheet_id: str,
     sheet_id: int,
 ):
     """Delete a sheet tab from a spreadsheet."""
     return service.delete_sheet(
-        user_id=user_id,
         spreadsheet_id=spreadsheet_id,
         sheet_id=sheet_id,
     )

@@ -1,5 +1,4 @@
 
-from uuid import UUID
 from typing import Any
 
 from pydantic import BaseModel, Field
@@ -40,7 +39,6 @@ class FindValues(BaseModel):
 
 def find_values(
     service,
-    user_id: UUID,
     spreadsheet_id: str,
     sheet_name: str,
     search_text: str,
@@ -53,7 +51,6 @@ def find_values(
 
     Args:
         service: Injected spreadsheet service.
-        user_id: Authenticated application user ID.
         spreadsheet_id: ID of the spreadsheet to search.
         sheet_name: Name of the sheet tab.
         search_text: Text or value to find.
@@ -65,7 +62,6 @@ def find_values(
         A list of matches containing cell addresses and their values.
     """
     return service.find_values(
-        user_id=user_id,
         spreadsheet_id=spreadsheet_id,
         sheet_name=sheet_name,
         search_text=search_text,
@@ -115,7 +111,6 @@ class FindRows(BaseModel):
 
 def find_rows(
     service,
-    user_id: UUID,
     spreadsheet_id: str,
     sheet_name: str,
     column_name: str,
@@ -129,7 +124,6 @@ def find_rows(
 
     Args:
         service: Injected spreadsheet service.
-        user_id: Authenticated application user ID.
         spreadsheet_id: ID of the spreadsheet to search.
         sheet_name: Name of the sheet tab.
         column_name: Header identifying the column to search.
@@ -142,7 +136,6 @@ def find_rows(
         Matching rows, including their row numbers and cell values.
     """
     return service.find_rows(
-        user_id=user_id,
         spreadsheet_id=spreadsheet_id,
         sheet_name=sheet_name,
         column_name=column_name,

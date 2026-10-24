@@ -1,5 +1,4 @@
 
-from uuid import UUID
 from typing import Any
 
 from pydantic import BaseModel, Field
@@ -27,7 +26,6 @@ class ReadRange(BaseModel):
 
 def read_range(
     service,
-    user_id: UUID,
     spreadsheet_id: str,
     range_name: str,
     value_render_option: str = "FORMATTED_VALUE",
@@ -37,7 +35,6 @@ def read_range(
 
     Args:
         service: Injected spreadsheet service.
-        user_id: Authenticated application user ID.
         spreadsheet_id: ID of the target spreadsheet.
         range_name: A1 notation range to read.
         value_render_option: Controls how cell values are represented.
@@ -46,7 +43,6 @@ def read_range(
         Range information and a two-dimensional array of cell values.
     """
     return service.read_range(
-        user_id=user_id,
         spreadsheet_id=spreadsheet_id,
         range_name=range_name,
         value_render_option=value_render_option,
@@ -77,7 +73,6 @@ class ReadMultipleRanges(BaseModel):
 
 def read_multiple_ranges(
     service,
-    user_id: UUID,
     spreadsheet_id: str,
     ranges: list[str],
     value_render_option: str = "FORMATTED_VALUE",
@@ -87,7 +82,6 @@ def read_multiple_ranges(
 
     Args:
         service: Injected spreadsheet service.
-        user_id: Authenticated application user ID.
         spreadsheet_id: ID of the target spreadsheet.
         ranges: List of A1 notation ranges.
         value_render_option: Controls how cell values are represented.
@@ -96,7 +90,6 @@ def read_multiple_ranges(
         Results for each requested range.
     """
     return service.read_multiple_ranges(
-        user_id=user_id,
         spreadsheet_id=spreadsheet_id,
         ranges=ranges,
         value_render_option=value_render_option,
@@ -118,7 +111,6 @@ class GetUsedRange(BaseModel):
 
 def get_used_range(
     service,
-    user_id: UUID,
     spreadsheet_id: str,
     sheet_name: str,
 ):
@@ -127,7 +119,6 @@ def get_used_range(
 
     Args:
         service: Injected spreadsheet service.
-        user_id: Authenticated application user ID.
         spreadsheet_id: ID of the target spreadsheet.
         sheet_name: Name of the sheet tab.
 
@@ -135,7 +126,6 @@ def get_used_range(
         The detected populated range in A1 notation.
     """
     return service.get_used_range(
-        user_id=user_id,
         spreadsheet_id=spreadsheet_id,
         sheet_name=sheet_name,
     )
@@ -161,7 +151,6 @@ class GetHeaderRow(BaseModel):
 
 def get_header_row(
     service,
-    user_id: UUID,
     spreadsheet_id: str,
     sheet_name: str,
     header_row: int = 1,
@@ -171,7 +160,6 @@ def get_header_row(
 
     Args:
         service: Injected spreadsheet service.
-        user_id: Authenticated application user ID.
         spreadsheet_id: ID of the target spreadsheet.
         sheet_name: Name of the sheet tab.
         header_row: One-based row containing the headers.
@@ -180,7 +168,6 @@ def get_header_row(
         A list of header values.
     """
     return service.get_header_row(
-        user_id=user_id,
         spreadsheet_id=spreadsheet_id,
         sheet_name=sheet_name,
         header_row=header_row,
@@ -202,7 +189,6 @@ class GetCell(BaseModel):
 
 def get_cell(
     service,
-    user_id: UUID,
     spreadsheet_id: str,
     cell_address: str,
 ):
@@ -211,7 +197,6 @@ def get_cell(
 
     Args:
         service: Injected spreadsheet service.
-        user_id: Authenticated application user ID.
         spreadsheet_id: ID of the target spreadsheet.
         cell_address: A1 notation address of the cell.
 
@@ -219,7 +204,6 @@ def get_cell(
         The cell value.
     """
     return service.get_cell(
-        user_id=user_id,
         spreadsheet_id=spreadsheet_id,
         cell_address=cell_address,
     )
@@ -240,7 +224,6 @@ class GetFormulas(BaseModel):
 
 def get_formulas(
     service,
-    user_id: UUID,
     spreadsheet_id: str,
     range_name: str,
 ):
@@ -249,7 +232,6 @@ def get_formulas(
 
     Args:
         service: Injected spreadsheet service.
-        user_id: Authenticated application user ID.
         spreadsheet_id: ID of the target spreadsheet.
         range_name: A1 notation range to inspect.
 
@@ -257,7 +239,6 @@ def get_formulas(
         The requested range and its formula values.
     """
     return service.get_formulas(
-        user_id=user_id,
         spreadsheet_id=spreadsheet_id,
         range_name=range_name,
     )

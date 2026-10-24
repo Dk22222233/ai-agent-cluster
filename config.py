@@ -10,4 +10,6 @@ class Settings(BaseSettings):
     GOOGLE_REDIRECT_URI:str
     REDIS_URL:str
     OAUTH_TOKEN_ENCRYPTION_KEY:str
+    # OAuth completion redirects to the configured frontend origin.
+    FRONTEND_URL: str = "http://localhost:5173"
 settings = Settings()

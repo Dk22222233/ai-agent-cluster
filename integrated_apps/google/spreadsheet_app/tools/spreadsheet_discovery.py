@@ -1,7 +1,5 @@
 
 from pydantic import BaseModel, Field
-from uuid import UUID
-
 
 # ---------- Search Spreadsheets ----------
 
@@ -22,7 +20,6 @@ class SearchSpreadsheets(BaseModel):
 
 def search_spreadsheets(
     service,
-    user_id: UUID,
     query: str,
     page_size: int = 10,
 ):
@@ -31,7 +28,6 @@ def search_spreadsheets(
 
     Args:
         service: Injected spreadsheet service.
-        user_id: Authenticated application user ID.
         query: Name or keywords to search for.
         page_size: Maximum number of results.
 
@@ -39,7 +35,6 @@ def search_spreadsheets(
         Matching spreadsheet metadata.
     """
     return service.search_spreadsheets(
-        user_id=user_id,
         query=query,
         page_size=page_size,
     )
@@ -65,7 +60,6 @@ class ListSpreadsheets(BaseModel):
 
 def list_spreadsheets(
     service,
-    user_id: UUID,
     page_size: int = 20,
     page_token: str | None = None,
 ):
@@ -74,7 +68,6 @@ def list_spreadsheets(
 
     Args:
         service: Injected spreadsheet service.
-        user_id: Authenticated application user ID.
         page_size: Maximum number of results.
         page_token: Token for retrieving the next page.
 
@@ -82,7 +75,6 @@ def list_spreadsheets(
         A page of spreadsheet metadata and, ideally, a next-page token.
     """
     return service.list_spreadsheets(
-        user_id=user_id,
         page_size=page_size,
         page_token=page_token,
     )

@@ -1,6 +1,4 @@
 
-from uuid import UUID
-
 from pydantic import BaseModel, Field, model_validator
 
 
@@ -16,7 +14,6 @@ class GetSpreadsheet(BaseModel):
 
 def get_spreadsheet(
     service,
-    user_id: UUID,
     spreadsheet_id: str,
 ):
     """
@@ -24,14 +21,12 @@ def get_spreadsheet(
 
     Args:
         service: Injected spreadsheet service.
-        user_id: Authenticated application user ID.
         spreadsheet_id: ID of the target spreadsheet.
 
     Returns:
         Spreadsheet metadata.
     """
     return service.get_spreadsheet(
-        user_id=user_id,
         spreadsheet_id=spreadsheet_id,
     )
 
@@ -48,7 +43,6 @@ class ListSheets(BaseModel):
 
 def list_sheets(
     service,
-    user_id: UUID,
     spreadsheet_id: str,
 ):
     """
@@ -57,14 +51,12 @@ def list_sheets(
 
     Args:
         service: Injected spreadsheet service.
-        user_id: Authenticated application user ID.
         spreadsheet_id: ID of the target spreadsheet.
 
     Returns:
         A list of sheet metadata.
     """
     return service.list_sheets(
-        user_id=user_id,
         spreadsheet_id=spreadsheet_id,
     )
 
@@ -99,7 +91,6 @@ class GetSheet(BaseModel):
 
 def get_sheet(
     service,
-    user_id: UUID,
     spreadsheet_id: str,
     sheet_name: str | None = None,
     sheet_id: int | None = None,
@@ -109,7 +100,6 @@ def get_sheet(
 
     Args:
         service: Injected spreadsheet service.
-        user_id: Authenticated application user ID.
         spreadsheet_id: ID of the parent spreadsheet.
         sheet_name: Exact tab title, if using its name.
         sheet_id: Numeric tab ID, if using its ID.
@@ -118,7 +108,6 @@ def get_sheet(
         Metadata for the requested tab.
     """
     return service.get_sheet(
-        user_id=user_id,
         spreadsheet_id=spreadsheet_id,
         sheet_name=sheet_name,
         sheet_id=sheet_id,
@@ -137,7 +126,6 @@ class GetSpreadsheetUrl(BaseModel):
 
 def get_spreadsheet_url(
     service,
-    user_id: UUID,
     spreadsheet_id: str,
 ):
     """
@@ -145,13 +133,11 @@ def get_spreadsheet_url(
 
     Args:
         service: Injected spreadsheet service.
-        user_id: Authenticated application user ID.
         spreadsheet_id: ID of the target spreadsheet.
 
     Returns:
         The spreadsheet URL.
     """
     return service.get_spreadsheet_url(
-        user_id=user_id,
         spreadsheet_id=spreadsheet_id,
     )
