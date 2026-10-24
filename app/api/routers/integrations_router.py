@@ -8,11 +8,40 @@ from app.api.dependencies import get_current_user, get_db
 
 router = APIRouter(prefix='/integrator',tags=['Integrations'])
 
-@router.get('/google/connect')
-def google_connect(current_user:UserResponse=Depends(get_current_user)):
-    user_id=current_user.id
-    auth_url=integration_service.start_google_oauth(user_id)
-    return {'url':auth_url}
+@router.get("/google/sheets/connect")
+def connect_sheets(
+    current_user: UserResponse = Depends(get_current_user),
+):
+    return {
+        "url": integration_service.start_google_oauth(
+            user_id=current_user.id,
+            integration_key="google_sheets",
+        )
+    }
+
+
+@router.get("/google/drive/connect")
+def connect_drive(
+    current_user: UserResponse = Depends(get_current_user),
+):
+    return {
+        "url": integration_service.start_google_oauth(
+            user_id=current_user.id,
+            integration_key="google_drive",
+        )
+    }
+
+
+@router.get("/google/docs/connect")
+def connect_docs(
+    current_user: UserResponse = Depends(get_current_user),
+):
+    return {
+        "url": integration_service.start_google_oauth(
+            user_id=current_user.id,
+            integration_key="google_docs",
+        )
+    }
 
 @router.get('/google/callback') #,response_model=OAuthResponse
 async def google_callback(

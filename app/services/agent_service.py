@@ -20,6 +20,7 @@ class AgentService:
         message_repo.create_msg(
             conversation_id=conv_orm.id,
             role='user',
+            # status=',', # only do work when there is something wrong
             content=request.message,# request message is str
             tool_calls=None,
             tool_call_id=None,
